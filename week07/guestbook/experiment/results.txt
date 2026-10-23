@@ -1,0 +1,209 @@
+
+================================================================
+0. 준비: 빌드하고 web 3개 + nginx + redis 띄우기
+================================================================
+$ docker compose down -v --remove-orphans > /dev/null 2>&1; true
+$ docker compose up -d --build --scale web=3 2>&1 | tail -n 8
+ Container guestbook-web-3  Waiting
+ Container guestbook-web-2  Waiting
+ Container guestbook-web-1  Waiting
+ Container guestbook-web-3  Healthy
+ Container guestbook-web-2  Healthy
+ Container guestbook-web-1  Healthy
+ Container guestbook-nginx-1  Starting
+ Container guestbook-nginx-1  Started
+(19:29:04) healthy web 3개 (0초 기다림)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 18 seconds (healthy)
+guestbook-web-2   running   Up 21 seconds (healthy)
+guestbook-web-3   running   Up 23 seconds (healthy)
+$ for i in 1 2 3 4 5 6; do curl -s localhost:18080/healthz; done   (응답한 컨테이너)
+  200:guestbook-web-3 200:guestbook-web-1 200:guestbook-web-3 200:guestbook-web-2 200:guestbook-web-1 200:guestbook-web-1
+
+================================================================
+1. 교안 48쪽 호기심: web-2 를 docker stop 하면? (restart: unless-stopped)
+================================================================
+(19:29:07) web-2 중지
+$ docker stop guestbook-web-2
+guestbook-web-2
+20초 기다림...
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 52 seconds (healthy)
+guestbook-web-2   exited    Exited (137) 21 seconds ago
+guestbook-web-3   running   Up 57 seconds (healthy)
+$ for i in 1 2 3 4 5 6; do curl -s localhost:18080/healthz; done   (응답한 컨테이너)
+  200:guestbook-web-1 200:guestbook-web-1 200:guestbook-web-1 200:guestbook-web-3 200:guestbook-web-1 200:guestbook-web-1
+$ docker inspect -f 'web-2 RestartCount={{.RestartCount}} Status={{.State.Status}}' guestbook-web-2
+web-2 RestartCount=0 Status=exited
+
+================================================================
+2. 사람이 직접 복구: docker compose up -d --scale web=3
+================================================================
+$ docker compose up -d --scale web=3 2>&1 | tail -n 6
+ Container guestbook-web-3  Waiting
+ Container guestbook-web-2  Waiting
+ Container guestbook-web-1  Waiting
+ Container guestbook-web-3  Healthy
+ Container guestbook-web-2  Healthy
+ Container guestbook-web-1  Healthy
+(19:29:51) healthy web 3개 (0초 기다림)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up About a minute (healthy)
+guestbook-web-2   running   Up 7 seconds (healthy)
+guestbook-web-3   running   Up About a minute (healthy)
+
+================================================================
+3. 사고로 꺼지면? (앱 프로세스가 스스로 죽는 상황을 SIGINT 로 흉내)
+================================================================
+$ docker inspect -f 'web-1 시작 시각={{.State.StartedAt}} RestartCount={{.RestartCount}}' guestbook-web-1
+web-1 시작 시각=2026-10-19T10:28:46.642312577Z RestartCount=0
+(19:29:51) web-1 안의 앱 프로세스(PID 1)에 SIGINT
+$ docker exec guestbook-web-1 python -c 'import os, signal; os.kill(1, signal.SIGINT)'
+10초 기다림...
+$ docker inspect -f 'web-1 시작 시각={{.State.StartedAt}} RestartCount={{.RestartCount}} Status={{.State.Status}}' guestbook-web-1
+web-1 시작 시각=2026-10-19T10:29:53.72632505Z RestartCount=1 Status=running
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 9 seconds (healthy)
+guestbook-web-2   running   Up 19 seconds (healthy)
+guestbook-web-3   running   Up About a minute (healthy)
+
+================================================================
+4. 컨테이너를 아예 지우면? docker rm -f guestbook-web-3
+================================================================
+(19:30:04) web-3 삭제
+$ docker rm -f guestbook-web-3
+guestbook-web-3
+15초 기다림...
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 29 seconds (healthy)
+guestbook-web-2   running   Up 38 seconds (healthy)
+
+================================================================
+5. 감시 스크립트 keep-web3.sh 를 켜고 같은 사고를 다시 내기
+================================================================
+(19:30:23) 감시 스크립트 시작 (PID 2878924, 5초마다 확인)
+(19:30:36) healthy web 3개 (0초 기다림)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 44 seconds (healthy)
+guestbook-web-2   running   Up 53 seconds (healthy)
+guestbook-web-3   running   Up 11 seconds (healthy)
+
+(19:30:38) 5-1. web-2 docker stop
+$ docker stop guestbook-web-2
+guestbook-web-2
+(19:31:17) healthy web 3개 (6초 기다림)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up About a minute (healthy)
+guestbook-web-2   running   Up 18 seconds (healthy)
+guestbook-web-3   running   Up 51 seconds (healthy)
+
+(19:31:17) 5-2. web-3 docker rm -f
+$ docker rm -f guestbook-web-3
+guestbook-web-3
+(19:31:35) healthy web 3개 (0초 기다림)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up About a minute (healthy)
+guestbook-web-2   running   Up 36 seconds (healthy)
+guestbook-web-3   running   Up 13 seconds (healthy)
+
+(19:31:36) 5-3. web-1 과 web-2 를 한꺼번에 docker stop
+$ docker stop guestbook-web-1 guestbook-web-2
+guestbook-web-1
+guestbook-web-2
+(19:32:04) healthy web 3개 (0초 기다림)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 13 seconds (healthy)
+guestbook-web-2   running   Up 14 seconds (healthy)
+guestbook-web-3   running   Up 42 seconds (healthy)
+$ for i in 1 2 3 4 5 6; do curl -s localhost:18080/healthz; done   (응답한 컨테이너)
+  200:guestbook-web-1 200:guestbook-web-2 200:guestbook-web-3 200:guestbook-web-3 200:guestbook-web-1 200:guestbook-web-3
+
+--- 감시 스크립트 로그 ---
+[2026-10-19 19:30:23] 감시 시작: web 3개 유지, 5초마다 확인 (끝내려면 Ctrl+C)
+[2026-10-19 19:30:23] web 2개 → 3개로 복구 시작
+[2026-10-19 19:30:28] 복구 완료: web 3개
+[2026-10-19 19:30:53] web 2개 → 3개로 복구 시작
+[2026-10-19 19:31:02] 복구 완료: web 3개
+[2026-10-19 19:31:19] web 2개 → 3개로 복구 시작
+[2026-10-19 19:31:24] 복구 완료: web 3개
+[2026-10-19 19:31:48] web 1개 → 3개로 복구 시작
+[2026-10-19 19:31:54] 복구 완료: web 3개
+
+================================================================
+6. 한계: 감시 스크립트가 죽으면?
+================================================================
+(19:32:07) 감시 스크립트 종료
+$ docker stop guestbook-web-2
+guestbook-web-2
+20초 기다림...
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 47 seconds (healthy)
+guestbook-web-2   exited    Exited (137) 21 seconds ago
+guestbook-web-3   running   Up About a minute (healthy)
+$ docker compose up -d --scale web=3 2>&1 | tail -n 3
+ Container guestbook-web-3  Healthy
+ Container guestbook-web-2  Healthy
+ Container guestbook-web-1  Healthy
+(19:32:48) healthy web 3개 (0초 기다림)
+
+================================================================
+7. 원하는 개수를 파일에 적어 두기: deploy.replicas: 3
+================================================================
+$ cat compose.replicas.yaml
+services:
+  web:
+    deploy:
+      replicas: 3
+$ docker compose -f compose.yaml -f compose.replicas.yaml down > /dev/null 2>&1; true
+$ docker compose -f compose.yaml -f compose.replicas.yaml up -d 2>&1 | tail -n 6
+ Container guestbook-web-1  Waiting
+ Container guestbook-web-3  Healthy
+ Container guestbook-web-2  Healthy
+ Container guestbook-web-1  Healthy
+ Container guestbook-nginx-1  Starting
+ Container guestbook-nginx-1  Started
+(19:33:32) healthy web 3개 (0초 기다림)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 18 seconds (healthy)
+guestbook-web-2   running   Up 19 seconds (healthy)
+guestbook-web-3   running   Up 20 seconds (healthy)
+$ docker stop guestbook-web-2
+guestbook-web-2
+(replicas 를 적어도 멈춘 것을 다시 켜 주지는 않음)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 44 seconds (healthy)
+guestbook-web-2   exited    Exited (137) 15 seconds ago
+guestbook-web-3   running   Up 47 seconds (healthy)
+$ docker compose -f compose.yaml -f compose.replicas.yaml up -d 2>&1 | tail -n 4
+ Container guestbook-web-1  Waiting
+ Container guestbook-web-3  Healthy
+ Container guestbook-web-2  Healthy
+ Container guestbook-web-1  Healthy
+(19:34:10) healthy web 3개 (0초 기다림)
+$ docker compose ps -a web --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
+NAME              STATE     STATUS
+guestbook-web-1   running   Up 55 seconds (healthy)
+guestbook-web-2   running   Up 8 seconds (healthy)
+guestbook-web-3   running   Up 58 seconds (healthy)
+
+================================================================
+8. 정리
+================================================================
+$ docker compose down -v --remove-orphans 2>&1 | tail -n 3
+ Volume guestbook_redis-data  Removing
+ Volume guestbook_redis-data  Removed
+ Network guestbook_default  Removed
+
+끝 (19:34:25)

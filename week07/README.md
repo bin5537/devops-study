@@ -388,3 +388,28 @@ scale, nginx
 | docker run | 개별 컨테이너를 직접 실행하고 관리 |
 | docker compose | 여러 컨테이너의 구성을 정의하고 단일 도커 엔진 환경에서 관리 |
 | Kubernetes | 여러 컴퓨터에 걸쳐 컨테이너 기반 서비스를 실행하고 원하는 상태가 유지되도록 자동 관리 |
+
+## 호기심 해결: web 3개 항상 유지하기
+
+48쪽 호기심 문제(멈춘 web은 아무도 다시 살리지 않음)를 지금까지 배운 셸 스크립트로 해결한 결과. 설명과 장단점은 보고서 4번 항목에 있다.
+
+- 스크립트: [guestbook/keep-web3.sh](./guestbook/keep-web3.sh)
+- 실험 스크립트와 기록: [guestbook/experiment/](./guestbook/experiment/)
+
+동작: '원하는 개수(3)'와 '실제로 실행 중인 개수'를 5초마다 비교해서, 모자라면 `docker compose up -d --scale web=3`을 실행한다.
+
+| 명령어 | 하는 일 |
+|---|---|
+| `cd ~/devops/week07/guestbook` |  |
+| `./keep-web3.sh 3 5 > keep-web3.log 2>&1 &` | web 3개, 5초마다 확인 (백그라운드) |
+| `docker stop guestbook-web-2` | 사고 내기 |
+| `tail -f keep-web3.log` | 몇 초 뒤 '복구 완료: web 3개' |
+
+실험 결과 (experiment/results.txt)
+
+| 사고 | 감시 스크립트 없이 | 감시 스크립트 켜고 |
+|---|---|---|
+| `docker stop guestbook-web-2` | 계속 Exited, 2개로 운영 | 발견 후 9초 만에 다시 3개 |
+| `docker rm -f guestbook-web-3` | 계속 2개 | 발견 후 5초 만에 새로 만들어 3개 |
+| web 2개 동시에 `docker stop` | (실험 안 함) | 발견 후 6초 만에 3개 |
+| 앱 프로세스가 스스로 죽음 | `restart: unless-stopped`로 약 2초 만에 재시작 | (재시작 정책이 먼저 처리) |
