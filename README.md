@@ -12,7 +12,7 @@
 | 4주차 | 자동화와 협업, 네트워크 (백업 스크립트, 브랜치/PR/Conflict, IP·포트·DNS) | [week04](./week04/) |
 | 5주차 | 도커 w/ GitHub Issue (이미지와 컨테이너, nginx, Issue → PR → Merge) | [week05](./week05/) |
 | 6주차 | 도커파일 (Dockerfile, 레이어 캐시, ghcr.io 배포) | [week06](./week06/) |
-| 7주차 | 도커 컴포즈 (Redis, 볼륨, .env, healthcheck, scale, nginx) | [week07](./week07/) |
+| 7주차 | 도커 컴포즈 (Redis, 볼륨, .env, healthcheck, scale, nginx) + web 3개 유지 스크립트 | [week07](./week07/) |
 
 ## 실습 환경
 
