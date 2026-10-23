@@ -1,0 +1,4 @@
+# 셸 스크립트는 항상 LF 줄바꿈 (윈도우에서 올려도 리눅스에서 바로 실행되게)
+*.sh text eol=lf
+*.yaml text eol=lf
+*.conf text eol=lf
