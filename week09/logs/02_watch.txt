@@ -1,0 +1,14 @@
+NAME                       READY   STATUS    RESTARTS   AGE
+mynginx-668c4f948b-hfvh9   1/1     Running   0          5s
+mynginx-668c4f948b-p687q   1/1     Running   0          5s
+mynginx-668c4f948b-q76pv   1/1     Running   0          5s
+mynginx-668c4f948b-hfvh9   1/1     Terminating   0          7s
+mynginx-668c4f948b-hfvh9   1/1     Terminating   0          7s
+mynginx-668c4f948b-s7ffs   0/1     Pending       0          0s
+mynginx-668c4f948b-s7ffs   0/1     Pending       0          0s
+mynginx-668c4f948b-s7ffs   0/1     ContainerCreating   0          0s
+mynginx-668c4f948b-hfvh9   0/1     Completed           0          7s
+mynginx-668c4f948b-s7ffs   0/1     ContainerCreating   0          0s
+mynginx-668c4f948b-hfvh9   0/1     Completed           0          7s
+mynginx-668c4f948b-hfvh9   0/1     Completed           0          7s
+mynginx-668c4f948b-s7ffs   1/1     Running             0          2s

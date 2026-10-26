@@ -1,0 +1,44 @@
+$ docker tag guestbook:v1 ghcr.io/bin5537/guestbook:v1
+
+$ kubectl delete deployment guestbook
+deployment.apps "guestbook" deleted from default namespace
+
+$ minikube image load ghcr.io/bin5537/guestbook:v1
+
+$ kubectl create deployment guestbook --image=ghcr.io/bin5537/guestbook:v1
+deployment.apps/guestbook created
+
+$ kubectl rollout status deployment/guestbook --timeout=180s
+Waiting for deployment "guestbook" rollout to finish: 0 of 1 updated replicas are available...
+deployment "guestbook" successfully rolled out
+
+$ kubectl get pods
+NAME                         READY   STATUS        RESTARTS      AGE
+guestbook-54fc857d7d-prb2v   1/1     Terminating   1 (93s ago)   3m31s
+guestbook-7bdf86db49-bt9tl   1/1     Running       0             0s
+
+$ kubectl get deployments
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+guestbook   1/1     1            1           0s
+
+$ kubectl logs -l app=guestbook
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.244.0.2:5000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [26/Oct/2026 09:14:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Oct/2026 09:14:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Oct/2026 09:14:41] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+[INFO] REDIS_HOST 없음 → 메모리 모드로 동작합니다.
+[INFO] InhaTC DevOps 방명록 시작 — http://0.0.0.0:5000
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.244.0.4:5000
+[33mPress CTRL+C to quit[0m
+

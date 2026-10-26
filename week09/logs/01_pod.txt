@@ -1,0 +1,157 @@
+$ kubectl get nodes -o wide
+NAME       STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION                              CONTAINER-RUNTIME
+minikube   Ready    control-plane   27s   v1.37.0   192.168.49.2   <none>        Debian GNU/Linux 12 (bookworm)   6.18.40.1-microsoft-standard-WSL2 (amd64)   containerd://2.3.4
+
+$ kubectl cluster-info
+Kubernetes control plane is running at https://127.0.0.1:32771
+CoreDNS is running at https://127.0.0.1:32771/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+$ kubectl get pods
+No resources found in default namespace.
+
+$ kubectl get pods -A
+NAMESPACE     NAME                               READY   STATUS    RESTARTS   AGE
+kube-system   coredns-559f6c778d-9sn78           0/1     Running   0          18s
+kube-system   etcd-minikube                      1/1     Running   0          25s
+kube-system   kindnet-hjdbl                      1/1     Running   0          18s
+kube-system   kube-apiserver-minikube            1/1     Running   0          25s
+kube-system   kube-controller-manager-minikube   1/1     Running   0          25s
+kube-system   kube-proxy-dd8md                   1/1     Running   0          18s
+kube-system   kube-scheduler-minikube            1/1     Running   0          25s
+kube-system   storage-provisioner                1/1     Running   0          24s
+
+$ kubectl config current-context
+minikube
+
+$ kubectl config get-contexts
+CURRENT   NAME       CLUSTER    AUTHINFO   NAMESPACE
+*         minikube   minikube   minikube   default
+
+$ kubectl get namespaces
+NAME              STATUS   AGE
+default           Active   27s
+kube-node-lease   Active   27s
+kube-public       Active   27s
+kube-system       Active   27s
+
+$ kubectl run mynginx --image=nginx
+pod/mynginx created
+
+$ kubectl wait --for=condition=Ready pod/mynginx --timeout=180s
+pod/mynginx condition met
+
+$ kubectl get pods
+NAME      READY   STATUS    RESTARTS   AGE
+mynginx   1/1     Running   0          10s
+
+$ kubectl describe pod mynginx
+Name:             mynginx
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Mon, 26 Oct 2026 18:11:02 +0900
+Labels:           run=mynginx
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.3
+IPs:
+  IP:  10.244.0.3
+Containers:
+  mynginx:
+    Container ID:   containerd://833cfbf4139952ce832d70676f98de34c1ff455c130afc01874f22300d6d767c
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:4c41e2d0a3a55b325ed572cd0200bdb72af1433c3daa2bca6ef8eea68ce504a2
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Mon, 26 Oct 2026 18:11:12 +0900
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-dfggd (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-dfggd:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  10s   default-scheduler  Successfully assigned default/mynginx to minikube
+  Normal  Pulling    9s    kubelet            spec.containers{mynginx}: Pulling image "nginx"
+  Normal  Pulled     0s    kubelet            spec.containers{mynginx}: Successfully pulled image "nginx" in 9.363s (9.363s including waiting). Image size: 63903938 bytes.
+  Normal  Created    0s    kubelet            spec.containers{mynginx}: Container created
+  Normal  Started    0s    kubelet            spec.containers{mynginx}: Container started
+
+$ kubectl logs mynginx
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+/docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/10/26 09:11:12 [notice] 1#1: using the "epoll" event method
+2026/10/26 09:11:12 [notice] 1#1: nginx/1.31.8
+2026/10/26 09:11:12 [notice] 1#1: built by gcc 14.2.0 (Debian 14.2.0-19) 
+2026/10/26 09:11:12 [notice] 1#1: OS: Linux 6.18.40.1-microsoft-standard-WSL2
+2026/10/26 09:11:12 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2026/10/26 09:11:12 [notice] 1#1: start worker processes
+2026/10/26 09:11:12 [notice] 1#1: start worker process 29
+2026/10/26 09:11:12 [notice] 1#1: start worker process 30
+2026/10/26 09:11:12 [notice] 1#1: start worker process 31
+2026/10/26 09:11:12 [notice] 1#1: start worker process 32
+2026/10/26 09:11:12 [notice] 1#1: start worker process 33
+2026/10/26 09:11:12 [notice] 1#1: start worker process 34
+2026/10/26 09:11:12 [notice] 1#1: start worker process 35
+2026/10/26 09:11:12 [notice] 1#1: start worker process 36
+2026/10/26 09:11:12 [notice] 1#1: start worker process 37
+2026/10/26 09:11:12 [notice] 1#1: start worker process 38
+2026/10/26 09:11:12 [notice] 1#1: start worker process 39
+2026/10/26 09:11:12 [notice] 1#1: start worker process 40
+2026/10/26 09:11:12 [notice] 1#1: start worker process 41
+2026/10/26 09:11:12 [notice] 1#1: start worker process 42
+2026/10/26 09:11:12 [notice] 1#1: start worker process 43
+2026/10/26 09:11:12 [notice] 1#1: start worker process 44
+2026/10/26 09:11:12 [notice] 1#1: start worker process 45
+2026/10/26 09:11:12 [notice] 1#1: start worker process 46
+2026/10/26 09:11:12 [notice] 1#1: start worker process 47
+2026/10/26 09:11:12 [notice] 1#1: start worker process 48
+
+$ kubectl exec mynginx -- cat /etc/os-release
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+NAME="Debian GNU/Linux"
+VERSION_ID="13"
+VERSION="13 (trixie)"
+VERSION_CODENAME=trixie
+DEBIAN_VERSION_FULL=13.7
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+
+$ kubectl exec mynginx -- ls /usr/share/nginx/html/index.html
+/usr/share/nginx/html/index.html
+
+$ curl -s localhost:8080 | grep title
+<title>Welcome to nginx!</title>
+

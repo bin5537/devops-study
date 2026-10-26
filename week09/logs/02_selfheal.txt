@@ -1,0 +1,97 @@
+$ kubectl delete pod mynginx
+pod "mynginx" deleted from default namespace
+
+$ kubectl get pods
+No resources found in default namespace.
+
+$ kubectl create deployment mynginx --image=nginx --replicas=3
+deployment.apps/mynginx created
+
+$ kubectl rollout status deployment/mynginx --timeout=180s
+Waiting for deployment "mynginx" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "mynginx" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "mynginx" rollout to finish: 2 of 3 updated replicas are available...
+deployment "mynginx" successfully rolled out
+
+$ kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+mynginx-668c4f948b-hfvh9   1/1     Running   0          4s
+mynginx-668c4f948b-p687q   1/1     Running   0          4s
+mynginx-668c4f948b-q76pv   1/1     Running   0          4s
+
+$ kubectl delete pod/mynginx-668c4f948b-hfvh9
+pod "mynginx-668c4f948b-hfvh9" deleted from default namespace
+
+$ kubectl get pods -w  (Pod 삭제 중 관찰)
+NAME                       READY   STATUS    RESTARTS   AGE
+mynginx-668c4f948b-hfvh9   1/1     Running   0          5s
+mynginx-668c4f948b-p687q   1/1     Running   0          5s
+mynginx-668c4f948b-q76pv   1/1     Running   0          5s
+mynginx-668c4f948b-hfvh9   1/1     Terminating   0          7s
+mynginx-668c4f948b-hfvh9   1/1     Terminating   0          7s
+mynginx-668c4f948b-s7ffs   0/1     Pending       0          0s
+mynginx-668c4f948b-s7ffs   0/1     Pending       0          0s
+mynginx-668c4f948b-s7ffs   0/1     ContainerCreating   0          0s
+mynginx-668c4f948b-hfvh9   0/1     Completed           0          7s
+mynginx-668c4f948b-s7ffs   0/1     ContainerCreating   0          0s
+mynginx-668c4f948b-hfvh9   0/1     Completed           0          7s
+mynginx-668c4f948b-hfvh9   0/1     Completed           0          7s
+mynginx-668c4f948b-s7ffs   1/1     Running             0          2s
+
+$ kubectl delete pods --all
+pod "mynginx-668c4f948b-p687q" deleted from default namespace
+pod "mynginx-668c4f948b-q76pv" deleted from default namespace
+pod "mynginx-668c4f948b-s7ffs" deleted from default namespace
+
+$ kubectl rollout status deployment/mynginx --timeout=180s
+Waiting for deployment "mynginx" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "mynginx" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "mynginx" rollout to finish: 2 of 3 updated replicas are available...
+deployment "mynginx" successfully rolled out
+
+$ kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+mynginx-668c4f948b-5n44c   1/1     Running   0          4s
+mynginx-668c4f948b-7znm2   1/1     Running   0          4s
+mynginx-668c4f948b-h67cv   1/1     Running   0          4s
+
+$ kubectl get deployments
+NAME      READY   UP-TO-DATE   AVAILABLE   AGE
+mynginx   3/3     3            3           19s
+
+$ kubectl get deploy,rs,pods
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/mynginx   3/3     3            3           20s
+
+NAME                                 DESIRED   CURRENT   READY   AGE
+replicaset.apps/mynginx-668c4f948b   3         3         3       20s
+
+NAME                           READY   STATUS    RESTARTS   AGE
+pod/mynginx-668c4f948b-5n44c   1/1     Running   0          5s
+pod/mynginx-668c4f948b-7znm2   1/1     Running   0          5s
+pod/mynginx-668c4f948b-h67cv   1/1     Running   0          5s
+
+$ kubectl scale deployment mynginx --replicas=5
+deployment.apps/mynginx scaled
+
+$ kubectl rollout status deployment/mynginx --timeout=180s
+Waiting for deployment "mynginx" rollout to finish: 3 of 5 updated replicas are available...
+Waiting for deployment "mynginx" rollout to finish: 4 of 5 updated replicas are available...
+deployment "mynginx" successfully rolled out
+
+$ kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+mynginx-668c4f948b-5n44c   1/1     Running   0          8s
+mynginx-668c4f948b-7znm2   1/1     Running   0          8s
+mynginx-668c4f948b-h67cv   1/1     Running   0          8s
+mynginx-668c4f948b-lk68n   1/1     Running   0          3s
+mynginx-668c4f948b-qqpvz   1/1     Running   0          3s
+
+$ kubectl scale deployment mynginx --replicas=2
+deployment.apps/mynginx scaled
+
+$ kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+mynginx-668c4f948b-5n44c   1/1     Running   0          13s
+mynginx-668c4f948b-h67cv   1/1     Running   0          13s
+
