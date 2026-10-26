@@ -1,0 +1,54 @@
+$ kubectl get namespaces
+NAME              STATUS   AGE
+default           Active   23m
+kube-node-lease   Active   23m
+kube-public       Active   23m
+kube-system       Active   23m
+
+$ kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+guestbook-7bdf86db49-bt9tl   1/1     Running   0          18m
+
+$ kubectl get pods -n kube-system
+NAME                               READY   STATUS    RESTARTS      AGE
+coredns-559f6c778d-9sn78           1/1     Running   1 (20m ago)   23m
+etcd-minikube                      1/1     Running   1 (20m ago)   23m
+kindnet-hjdbl                      1/1     Running   1 (20m ago)   23m
+kube-apiserver-minikube            1/1     Running   1 (20m ago)   23m
+kube-controller-manager-minikube   1/1     Running   1 (20m ago)   23m
+kube-proxy-dd8md                   1/1     Running   1 (20m ago)   23m
+kube-scheduler-minikube            1/1     Running   1 (20m ago)   23m
+storage-provisioner                1/1     Running   2 (19m ago)   23m
+
+$ kubectl get pods -A
+NAMESPACE     NAME                               READY   STATUS    RESTARTS      AGE
+default       guestbook-7bdf86db49-bt9tl         1/1     Running   0             18m
+kube-system   coredns-559f6c778d-9sn78           1/1     Running   1 (20m ago)   23m
+kube-system   etcd-minikube                      1/1     Running   1 (20m ago)   23m
+kube-system   kindnet-hjdbl                      1/1     Running   1 (20m ago)   23m
+kube-system   kube-apiserver-minikube            1/1     Running   1 (20m ago)   23m
+kube-system   kube-controller-manager-minikube   1/1     Running   1 (20m ago)   23m
+kube-system   kube-proxy-dd8md                   1/1     Running   1 (20m ago)   23m
+kube-system   kube-scheduler-minikube            1/1     Running   1 (20m ago)   23m
+kube-system   storage-provisioner                1/1     Running   2 (19m ago)   23m
+
+$ kubectl get nodes -o wide
+NAME       STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION                              CONTAINER-RUNTIME
+minikube   Ready    control-plane   23m   v1.37.0   192.168.49.2   <none>        Debian GNU/Linux 12 (bookworm)   6.18.40.1-microsoft-standard-WSL2 (amd64)   containerd://2.3.4
+
+$ kubectl cluster-info
+Kubernetes control plane is running at https://127.0.0.1:32771
+CoreDNS is running at https://127.0.0.1:32771/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+$ kubectl config current-context
+minikube
+
+$ kubectl config use-context minikube
+Switched to context "minikube".
+
+$ kubectl config get-contexts
+CURRENT   NAME       CLUSTER    AUTHINFO   NAMESPACE
+*         minikube   minikube   minikube   default
+
