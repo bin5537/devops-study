@@ -50,7 +50,7 @@ $ kubectl port-forward deployment/guestbook 8080:5000
 - 제목: InhaTC DevOps 방명록 / 저장소: Memory / **Pod/Host: guestbook-7bdf86db49-bt9tl**
 - Pod 삭제 → 새 Pod 생성, 그러나 기존 port-forward는 끊김 → 다시 실행해야 접속됨 (logs/03_guestbook.txt)
 
-<!-- 브라우저 캡처 이미지: ![guestbook](guestbook.png) -->
+![guestbook](guestbook.png)
 
 ## 4. 선언형을 내 언어로
 
